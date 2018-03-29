@@ -1,0 +1,6 @@
+#!/bin/bash
+
+wget http://{{ pxe_host_ip }}/ks/xenserver/xen72-init.sh -O $1/root/xen72-init.sh
+
+chmod 777 $1/root/xen72-init.sh
+chmod 777 $1/etc/rc.d/rc.local

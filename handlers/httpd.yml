@@ -1,0 +1,7 @@
+---
+
+- name: Enable and Restart httpd Server
+  systemd:
+    name: httpd
+    state: restarted
+    enabled: True

@@ -1,0 +1,21 @@
+default menu.c32
+prompt 0
+timeout 60
+
+MENU TITLE PXE Menu
+
+LABEL XenServer 7.2 ks
+        MENU DEFAULT
+        MENU LABEL XenServer 7.2 ks
+        KERNEL xen-mboot.c32
+        APPEND /xenserver72/xen.gz dom0_max_vcpus=8 dom0_mem=8192M com1=115200,8n1 console=com1,vga --- /xenserver72/vmlinuz xencons=hvc console=hvc0 console=tty0 answerfile_device=eth0 answerfile=http://{{ pxe_host_ip }}/ks/xenserver/xen72-ansfile.xml install --- /xenserver72/install.img
+
+LABEL CentOS 7.4 ks
+        MENU LABEL CentOS 7.4 ks
+        KERNEL /centos74/vmlinuz
+        APPEND initrd=/centos74/initrd.img ip=dhcp ks=http://{{ pxe_host_ip }}/ks/centos/c74.cfg repo=http://{{ pxe_host_ip }}/centos74/
+
+LABEL CentOS 6.9 ks
+        MENU LABEL CentOS 6.9 ks
+        KERNEL /centos69/vmlinuz
+        APPEND initrd=/centos69/initrd.img ip=dhcp ks=http://{{ pxe_host_ip }}/ks/centos/c69.cfg repo=http://{{ pxe_host_ip }}/centos69/

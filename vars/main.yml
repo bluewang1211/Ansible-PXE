@@ -1,0 +1,24 @@
+---
+
+# PXE
+pxe_host_ip:
+
+# DHCP
+dhcp_domain_name_server:
+dhcp_subnet:
+dhcp_range_start:
+dhcp_range_end:
+dhcp_default_gateway:
+dhcp_next_server:
+
+# DNS
+dns_example_ip:
+dns_arpa_ip:
+
+# Kickstart
+disk_type:
+dns_ip1:
+dns_ip2:
+ntp_ip1:
+ntp_ip2:
+xen_passwd:

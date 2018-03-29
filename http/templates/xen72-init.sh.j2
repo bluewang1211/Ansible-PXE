@@ -1,0 +1,45 @@
+#/bin/bash
+
+# write log
+echo "start" >> /root/init.log
+
+# include env
+export PATH=/opt/xensource/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/root/bin
+
+# nagios setting
+wget http://{{ pxe_host_ip }}/tools/nagios.tar.gz
+tar zxvf /root/nagios.tar.gz
+mv /root/nagios /usr/local/
+/usr/sbin/useradd nagios
+
+/bin/chmod 755 /run/sr-mount
+
+oldvmdisk_id=$(cat /usr/local/nagios/etc/nrpe.cfg |grep vmdisk |cut -d "/" -f 9)
+newvmdisk_id=$(df -h|grep mapper|cut -d "/" -f 7)
+/bin/sed -i 's/'$oldvmdisk_id'/'$newvmdisk_id'/g' /usr/local/nagios/etc/nrpe.cfg
+
+/usr/local/nagios/bin/nrpe -c /usr/local/nagios/etc/nrpe.cfg -d
+/bin/rm -rf /root/nagios.tar.gz
+
+# nagios boot start
+/bin/echo "/bin/chmod 755 /run/sr-mount" >> /etc/rc.local
+/bin/echo "/usr/local/nagios/bin/nrpe -c /usr/local/nagios/etc/nrpe.cfg -d" >> /etc/rc.local
+
+# enable / disable / start / service
+systemctl stop iptables
+systemctl disable iptables
+systemctl start snmpd
+systemctl enable snmpd
+
+sh /opt/xensource/packages/files/transfer-vm/install-transfer-vm.sh
+
+# set dns
+echo "nameserver {{ dns_ip1 }}" > /etc/resolv.conf
+echo "nameserver {{ dns_ip2 }}" >> /etc/resolv.conf
+
+# sshkey
+mkdir -p /root/.ssh/
+echo "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDNzgA81xcOKp/joEp8jHKamtw+VXSoaFGGiH/EzrLMGHQggGs2I82inX62nP840U4yJGnVSsuKT5kl0O+qXLhI0ZrBpTaCwwGx2ugeQE6lLuvLrrCE1wsoFGc5+m8SSk/sqMlyhxkfQptSztAYKC9vMbsZDTnkk3gzfFaKHFCkIWQji/zjurwZZ7GSJgg/2ObBQQsr7ZunKf9yTKSkrlFpdRL7Ph03cg8QUzucS2OdtVTpk+ApVxUFvXE73gIJ6MPZpDpD5+q6f5G8kWseQG9ue9sc7YpE4zB6MQ2wohZA5HaSugzBeCHm2owDjTYJbyN3YEsyYbghEX90HeQpr011 root@watcher" > /root/.ssh/authorized_keys
+
+# write log
+echo "final" >> /root/init.log

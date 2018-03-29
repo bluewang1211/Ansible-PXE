@@ -1,0 +1,22 @@
+---
+
+- name: install tftp , tftp-server , syslinux
+  yum: pkg={{ item }} state=present
+  with_items:
+    - tftp
+    - tftp-server
+    - syslinux
+
+- name: copy tftpboot to remote host
+  copy:
+    src: tftpboot
+    dest: /var/lib/
+
+- name: copy pxe menu to remote host
+  template:
+    src: default.j2
+    dest: /var/lib/tftpboot/pxelinux.cfg/default
+    owner: root
+    group: root
+    mode: 0644
+  notify: Enable and Restart tftp Server

@@ -1,0 +1,7 @@
+---
+
+- name: Enable and Restart tftp Server
+  systemd:
+    name: tftp
+    state: restarted
+    enabled: True

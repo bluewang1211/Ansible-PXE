@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<installation srtype="ext">
+<primary-disk>sda</primary-disk>
+<keymap>us</keymap>
+<root-password>{{ xen_passwd }}</root-password>
+<source type="url">http://{{ pxe_host_ip }}/xenserver72/</source>
+<ntp-server>{{ ntp_ip1 }}</ntp-server>
+<admin-interface name="eth0" proto="dhcp"/>
+<timezone>Asia/Taipei</timezone>
+<name-server>{{ dns_ip1 }}</name-server>
+<hostname>xen</hostname>
+<script stage="filesystem-populated" type="url">http://{{ pxe_host_ip }}/ks/post-script.sh</script>
+</installation>

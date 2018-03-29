@@ -1,0 +1,52 @@
+---
+
+- name: Install http server
+  yum:
+    name: httpd
+    state: present
+
+- name: copy html folder to remote host
+  copy:
+    src: html
+    dest: /var/www/
+
+- name: Set centos7.4 kickstart file
+  template:
+    src: c74.cfg.j2
+    dest: /var/www/html/ks/centos/c74.cfg
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Set centos6.9 kickstart file
+  template:
+    src: c69.cfg.j2
+    dest: /var/www/html/ks/centos/c69.cfg
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Set post-script.sh
+  template:
+    src: post-script.sh.j2
+    dest: /var/www/html/ks/xenserver/post-script.sh
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Set xen72-ansfile.xml.j2
+  template:
+    src: xen72-ansfile.xml.j2
+    dest: /var/www/html/ks/xenserver/xen72-ansfile.xml.j2
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Set xen72-init.sh.j2
+  template:
+    src: xen72-init.sh.j2
+    dest: /var/www/html/ks/xenserver/xen72-init.sh.j2
+    owner: root
+    group: root
+    mode: 0644
+  notify: Enable and Restart httpd Server

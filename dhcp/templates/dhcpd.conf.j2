@@ -1,0 +1,17 @@
+#   see /usr/share/doc/dhcp*/dhcpd.conf.example
+#   see dhcpd.conf(5) man page
+#
+option domain-name "example.com";
+option domain-name-servers {{ dhcp_domain_name_server }};
+
+default-lease-time 3600;
+max-lease-time 7200;
+
+log-facility local7;
+
+subnet {{ dhcp_subnet }} netmask 255.255.255.0 {
+  range {{ dhcp_range_start }} {{ dhcp_range_end }};
+  option routers {{ dhcp_default_gateway }};
+  next-server {{ dhcp_next_server }};
+  filename "pxelinux.0";
+}

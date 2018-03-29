@@ -1,0 +1,2 @@
+[pxe]
+pxe.example.com ansible_host=

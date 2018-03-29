@@ -1,0 +1,21 @@
+---
+- hosts: pxe
+  remote_user: root
+#  become: true
+#  become_user: root
+
+  vars_files:
+    - defaults/main.yml
+#    - vars/main.yml
+
+  handlers:
+    - import_tasks: handlers/dhcp.yml
+    - import_tasks: handlers/named.yml
+    - import_tasks: handlers/tftp.yml
+    - import_tasks: handlers/httpd.yml
+
+  roles:
+    - dhcp
+    - dns
+    - tftp
+    - http

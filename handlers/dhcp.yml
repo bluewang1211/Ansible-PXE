@@ -1,0 +1,7 @@
+---
+
+- name: Enable and Restart DHCP Server
+  systemd:
+    name: dhcpd
+    state: restarted
+    enabled: True

@@ -1,0 +1,143 @@
+# version=Eric-20171222-1.0
+
+# System authorization information
+auth --enableshadow --passalgo=sha512
+
+# Use Network installation
+url --url=http://{{ pxe_host_ip }}/centos74/
+
+# Use text install
+text
+
+# Run the Setup Agent on first boot
+firstboot --enable
+ignoredisk --only-use={{ disk_type }}
+
+# Keyboard layouts
+keyboard --vckeymap=us --xlayouts='us'
+
+# System language
+lang en_US.UTF-8
+
+# Network information
+network  --bootproto=dhcp --device=eth0 --noipv6
+network  --hostname=localhost.localdomain
+
+# Root password
+rootpw --iscrypted $6$RtgOArpjNbkDQoY9$jkqPPCoNEIO6jD/0DhcOP0FKo1EBvIYmHA1QyM.3YF/lnW1pGO.yfUcyKNlMMsPzFGCCpIjdXz6fjlgPMG.5F/
+
+# System timezone
+timezone Asia/Taipei --isUtc --nontp
+
+# System services
+services --disabled="chronyd,NetworkManager,postfix,kdump"
+services --enabled="network"
+
+selinux --disabled
+
+# System bootloader configuration
+bootloader --location=mbr --boot-drive={{ disk_type }}
+
+# Partition clearing information
+clearpart --all
+zerombr
+
+%pre
+# Disk partitioning information
+echo "part / --fstype="xfs" --ondisk={{ disk_type }} --size=$(cat /proc/partitions | grep {{ disk_type }} | head -n 1 | awk '{print $3/1024-4096}')" >> /tmp/disk.cfg
+echo "part swap --fstype="swap" --ondisk={{ disk_type }} --size=4095" >> /tmp/disk.cfg
+
+%end
+
+%include /tmp/disk.cfg
+
+%packages
+@^minimal
+@core
+-firewalld
+bind-utils
+device-mapper-persistent-data
+gcc
+vim
+nc
+lrzsz
+lsof
+lvm2
+telnet
+mtr
+ntpdate
+nfs-utils
+openssh-clients
+net-tools
+rsync
+wget
+iotop
+sysstat
+tcpdump
+traceroute
+man
+yum-utils
+
+%end
+
+%post
+echo "vm.swappiness = 1" >> /etc/sysctl.conf
+echo "vm.overcommit_memory = 1" >> /etc/sysctl.conf
+echo "net.ipv6.conf.all.disable_ipv6 = 1" >> /etc/sysctl.conf
+echo "net.ipv6.conf.default.disable_ipv6 = 1" >> /etc/sysctl.conf
+sed -i 's/#ListenAddress 0.0.0.0/ListenAddress 0.0.0.0/g' /etc/ssh/sshd_config
+
+cat > /etc/sysconfig/network-scripts/ifcfg-example <<EOF
+DEVICE=example
+TYPE=Ethernet
+BOOTPROTO=dhcp
+#IPADDR=
+#NETMASK=
+#GATEWAY=
+ONBOOT=no
+IPV6INIT=no
+NM_CONTROLLED=no
+EOF
+
+cat <<EOF | sudo tee /etc/yum.repos.d/influxdb.repo
+[influxdb]
+name=InfluxDB Repository - RHEL \$releasever
+baseurl=https://repos.influxdata.com/rhel/\$releasever/\$basearch/stable
+enabled=1
+gpgcheck=1
+gpgkey=https://repos.influxdata.com/influxdb.key
+EOF
+
+# sshkey
+mkdir -p /root/.ssh/
+echo "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCrMlAdGUQUyUKKFWQ/yjcxA7OKUIn5f6F3fOPzmsQ2/HtjvRj55d8gA75cdZG1ApCJ8wb1vHTIrV4GyIhV7z9MhS0tMpe4bSgVCm2es5URldKHX+LtB2vKPZBI3YfiDpCBBzxblRIsIxa1eBU0MRonPCtMihey0iQ3bJ6xpMAvmVBh3/+cgDdvBTu+cM/LxPPWFwOPwtgMxFwowN+AAS7ZUV/vUbhCQgs22Up/Nudz/cVqAfguwcoeLSGudkPsnwyyrJfA23EzCze2ofj56mNbb1r91ekkgz8Hi9tM6xGcXl7xqDn/TAhlHQ2mF1/bEa98irYOvtRi3erO5Ut0qwhP root@pxe.example.com" >> /root/.ssh/authorized_keys
+
+# .vimrc
+echo "set cursorline" >> /root/.vimrc
+echo "set hlsearch" >> /root/.vimrc
+echo "syntax on" >> /root/.vimrc
+
+# Add ntp crontab
+echo "15 2,14 * * *    /usr/sbin/ntpdate {{ ntp_ip1 }}" >> /var/spool/cron/root
+echo "16 2,14 * * *    /usr/sbin/ntpdate {{ ntp_ip2 }}" >> /var/spool/cron/root
+
+# Get init script
+mkdir -p /root/bin/
+curl -o /root/bin/c74-init.sh http://{{ pxe_host_ip }}/ks/centos/c74-init.sh
+
+# Get git
+#curl -o /etc/profile.d/git.sh http://{{ pxe_host_ip }}/tools/git.sh
+
+%end
+
+%addon com_redhat_kdump --disable --reserve-mb='auto'
+
+%end
+
+%anaconda
+pwpolicy root --minlen=6 --minquality=50 --notstrict --nochanges --notempty
+pwpolicy user --minlen=6 --minquality=50 --notstrict --nochanges --notempty
+pwpolicy luks --minlen=6 --minquality=50 --notstrict --nochanges --notempty
+%end
+
+reboot
